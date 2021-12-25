@@ -72,15 +72,25 @@ void ConverFields(const google::protobuf::Descriptor *d) {
     auto f = d->field(i);
     std::cerr << "  - ";
     auto ods_t = GetODSType(f->type());
-    if (!ods_t.empty()) {
-      std::cerr << ods_t << ": ";
+    if (f->type() == FieldDescriptor::TYPE_ENUM &&
+        f->enum_type()->name() == "DataType") {
+      std::cerr << "OneFlow_DataType";
     } else if (f->type() == FieldDescriptor::TYPE_MESSAGE) {
       auto t = f->message_type();
-      std::cerr << t->name() << ": ";
+      if (t->name() == "ShapeProto") {
+        std::cerr << "ShapeAttr";
+      } else if (t->name() == "Int64List") {
+        std::cerr << "SI64ArrayAttr";
+      } else {
+        std::cerr << "[" << t->name() << "]";
+      }
+    } else if (!ods_t.empty()) {
+      std::cerr << ods_t;
     } else {
       LOG("can't handle" + std::to_string(f->type()));
       std::exit(1);
     }
+    std::cerr << ":$";
     LOG(f->name());
   }
 }
