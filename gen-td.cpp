@@ -22,6 +22,25 @@ MyCodeGenerator::MyCodeGenerator() {}
 
 MyCodeGenerator::~MyCodeGenerator() {}
 
+#define FOR_RANGE(i, end) for (size_t i = (0), __end = (end); i < __end; ++i)
+#define LOG(x) std::cerr << x << "\n";
+namespace {
+void ConverFields(const google::protobuf::Descriptor *d) {
+  FOR_RANGE(i, d->field_count()) {
+    auto f = d->field(i);
+    auto t = f->message_type();
+    if (t) {
+      LOG("  - " + t->name());
+    }
+    LOG("  - " + f->name());
+  }
+}
+
+const int USER_OP_NUMBER = 199;
+bool IsSystemOp(int number) { return number > 100 && number < USER_OP_NUMBER; }
+
+} // namespace
+
 bool MyCodeGenerator::Generate(const FileDescriptor *file,
                                const std::string &parameter,
                                GeneratorContext *generator_context,
@@ -38,7 +57,12 @@ bool MyCodeGenerator::Generate(const FileDescriptor *file,
   auto op_type = OperatorConf->FindOneofByName("op_type");
   for (int filed_i; filed_i < op_type->field_count(); filed_i += 1) {
     auto m = op_type->field(filed_i);
+    const bool should_convert = IsSystemOp(m->number());
+    if (!should_convert)
+      continue;
+    std::cerr << m->number() << "\n";
     std::cerr << m->name() << "\n";
+    ConverFields(m->message_type());
   }
   return true;
 }
