@@ -35,11 +35,13 @@ public:
     return env.render(
         R"(
 def OneFlow_{{ op_class_name }} : OneFlow_BaseOp<"{{ name }}", [NoSideEffect, DeclareOpInterfaceMethods<UserOpCompatibleInterface>]> {
+{% if length(input) %}
   let input = (ins
 ## for i in input
       {{ i }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
+{% endif %}
   let output = (outs
 ## for o in output
       {{ o }}{% if not loop.is_last %},{% endif %}
