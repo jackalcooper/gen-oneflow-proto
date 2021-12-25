@@ -1,31 +1,46 @@
 #include "google/protobuf/compiler/cpp/cpp_helpers.h"
+#include "inja.hpp"
 #include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/compiler/plugin.h>
 #include <google/protobuf/descriptor.h>
+
 #undef NDEBUG
 using namespace google::protobuf::compiler;
 using namespace google::protobuf;
+using inja::json;
+
 class ODSDefinition {
 public:
-  ODSDefinition() = default;
+  ODSDefinition(std::string op_type_name)
+      : op_type_name(op_type_name),
+        def{{"name", op_type_name},
+            {"op_class_name",
+             cpp::UnderscoresToCamelCase(op_type_name, true) + "Op"},
+            {"input", json::array()},
+            {"output", json::array()},
+            {"attrs", json::array()}} {};
   ODSDefinition(ODSDefinition &&) = default;
   ODSDefinition(const ODSDefinition &) = default;
   ODSDefinition &operator=(ODSDefinition &&) = default;
   ODSDefinition &operator=(const ODSDefinition &) = default;
   ~ODSDefinition() = default;
 
-  std::string base_class;
   std::string op_type_name;
-  std::vector<std::string> input;
-  std::vector<std::string> output;
-  std::vector<std::string> attrs;
-
+  json def;
+  inja::Environment env;
   std::string serialize() {
+
     std::string result{};
-    // result += "class OneFlow_";
-    // result += cpp::UnderscoresToCamelCase(op_type_name, true);
-    // result += "Op : " + "OneFlow_BaseOp" + "<\"" + op_type_name
-    //           << "\", [" + GetTraits() + "]> "; // TODO: add traits
+    env.render(
+        R"(
+def OneFlow_{{ op_class_name }} : OneFlow_BaseOp<"{{ name }}", []>
+  let attrs = (ins
+## for attr in attrs
+      {{ attr }}{% if not loop.is_last %},{% endif %}
+## endfor
+  );
+)",
+        def);
     return result;
   }
 };
