@@ -118,34 +118,33 @@ std::string GetODSType(FieldDescriptor::Type t) {
   return "";
 }
 
-void ConverFields(const google::protobuf::Descriptor *d) {
+void ConverFields(const google::protobuf::Descriptor *d,
+                  ODSDefinition &ods_def) {
   FOR_RANGE(i, d->field_count()) {
     const bool is_last = i == d->field_count() - 1;
     auto f = d->field(i);
-    std::cerr << "    ";
     auto ods_t = GetODSType(f->type());
     if (f->type() == FieldDescriptor::TYPE_ENUM &&
         f->enum_type()->name() == "DataType") {
-      std::cerr << "OneFlow_DataType";
+      ods_def.def["attrs"].push_back("DataType:$" + f->name());
     } else if (f->type() == FieldDescriptor::TYPE_MESSAGE) {
       auto t = f->message_type();
       if (t->name() == "ShapeProto") {
-        std::cerr << "ShapeAttr";
+        ods_def.def["attrs"].push_back("ShapeAttr:$" + f->name());
       } else if (t->name() == "Int64List") {
         std::cerr << "SI64ArrayAttr";
       } else if (t->name() == "LogicalBlobId") {
-        std::cerr << "OneFlow_Tensor";
+        ods_def.def["input"].push_back("OneFlow_Tensor:$" + f->name());
       } else {
-        std::cerr << "[" << t->name() << "]";
+        ods_def.def["attrs"].push_back("[" + t->name() + "]" + ":$" +
+                                       f->name());
       }
     } else if (!ods_t.empty()) {
-      std::cerr << ods_t;
+      ods_def.def["attrs"].push_back(ods_t + ":$" + f->name());
     } else {
       LOG("can't handle" + std::to_string(f->type()));
       std::exit(1);
     }
-    std::cerr << ":$";
-    LOG(f->name() + (is_last ? "" : ","));
   }
 }
 
@@ -186,7 +185,7 @@ bool MyCodeGenerator::Generate(const FileDescriptor *file,
     assert(EndsWith(m->name(), "_conf"));
     const std::string register_name = m->name().substr(0, m->name().size() - 5);
     ODSDefinition ods_def(register_name);
-
+    ConverFields(m->message_type(), ods_def);
     std::cerr << ods_def.serialize();
   }
   return true;
