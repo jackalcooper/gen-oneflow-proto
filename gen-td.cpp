@@ -29,10 +29,11 @@ void ConverFields(const google::protobuf::Descriptor *d) {
   FOR_RANGE(i, d->field_count()) {
     auto f = d->field(i);
     auto t = f->message_type();
+    std::cerr << "  - ";
     if (t) {
-      LOG("  - " + t->name());
+      std::cerr << t->name() << ": ";
     }
-    LOG("  - " + f->name());
+    LOG(f->name());
   }
 }
 
