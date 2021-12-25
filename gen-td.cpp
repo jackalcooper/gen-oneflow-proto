@@ -5,23 +5,44 @@
 #undef NDEBUG
 using namespace google::protobuf::compiler;
 using namespace google::protobuf;
+class ODSDefinition {
+public:
+  ODSDefinition() = default;
+  ODSDefinition(ODSDefinition &&) = default;
+  ODSDefinition(const ODSDefinition &) = default;
+  ODSDefinition &operator=(ODSDefinition &&) = default;
+  ODSDefinition &operator=(const ODSDefinition &) = default;
+  ~ODSDefinition() = default;
+
+  std::string base_class;
+  std::string op_type_name;
+  std::vector<std::string> input;
+  std::vector<std::string> output;
+  std::vector<std::string> attrs;
+
+  std::string serialize() {
+    std::string result{};
+    // result += "class OneFlow_";
+    // result += cpp::UnderscoresToCamelCase(op_type_name, true);
+    // result += "Op : " + "OneFlow_BaseOp" + "<\"" + op_type_name
+    //           << "\", [" + GetTraits() + "]> "; // TODO: add traits
+    return result;
+  }
+};
+
 class MyCodeGenerator : public CodeGenerator {
 public:
-  MyCodeGenerator();
+  MyCodeGenerator() = default;
   MyCodeGenerator(MyCodeGenerator &&) = default;
   MyCodeGenerator(const MyCodeGenerator &) = default;
   MyCodeGenerator &operator=(MyCodeGenerator &&) = default;
   MyCodeGenerator &operator=(const MyCodeGenerator &) = default;
-  ~MyCodeGenerator();
+  ~MyCodeGenerator() = default;
 
   bool Generate(const FileDescriptor *file, const std::string &parameter,
                 GeneratorContext *generator_context,
                 std::string *error) const override;
 };
-
-MyCodeGenerator::MyCodeGenerator() {}
-
-MyCodeGenerator::~MyCodeGenerator() {}
 
 #define FOR_RANGE(i, end) for (size_t i = (0), __end = (end); i < __end; ++i)
 #define LOG(x) std::cerr << x << "\n";
