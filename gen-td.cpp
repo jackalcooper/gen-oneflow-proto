@@ -42,16 +42,20 @@ def OneFlow_{{ op_class_name }} : OneFlow_BaseOp<"{{ name }}", [NoSideEffect, De
 ## endfor
   );
 {% endif %}
+{% if length(output) %}
   let output = (outs
 ## for o in output
       {{ o }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
+{% endif %}
+{% if length(attrs) %}
   let attrs = (ins
 ## for attr in attrs
       {{ attr }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
+{% endif %}
 }
 )",
         def);
