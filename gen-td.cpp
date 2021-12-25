@@ -25,11 +25,57 @@ MyCodeGenerator::~MyCodeGenerator() {}
 #define FOR_RANGE(i, end) for (size_t i = (0), __end = (end); i < __end; ++i)
 #define LOG(x) std::cerr << x << "\n";
 namespace {
+
+std::string GetODSType(FieldDescriptor::Type t) {
+  switch (t) {
+  case FieldDescriptor::TYPE_DOUBLE:
+    return "F64Attr";
+  case FieldDescriptor::TYPE_FLOAT:
+    return "F32Attr";
+  case FieldDescriptor::TYPE_INT64:
+    return "SI64Attr";
+  case FieldDescriptor::TYPE_UINT64:
+    return "SI64Attr";
+  case FieldDescriptor::TYPE_INT32:
+    return "SI32Attr";
+  case FieldDescriptor::TYPE_FIXED64:
+    return "";
+  case FieldDescriptor::TYPE_FIXED32:
+    return "";
+  case FieldDescriptor::TYPE_BOOL:
+    return "BoolAttr";
+  case FieldDescriptor::TYPE_STRING:
+    return "StrAttr";
+  case FieldDescriptor::TYPE_GROUP:
+    return "";
+  case FieldDescriptor::TYPE_MESSAGE:
+    return "";
+  case FieldDescriptor::TYPE_BYTES:
+    return "";
+  case FieldDescriptor::TYPE_UINT32:
+    return "SI32Attr";
+  case FieldDescriptor::TYPE_ENUM:
+    return "";
+  case FieldDescriptor::TYPE_SFIXED32:
+    return "";
+  case FieldDescriptor::TYPE_SFIXED64:
+    return "";
+  case FieldDescriptor::TYPE_SINT32:
+    return "";
+  case FieldDescriptor::TYPE_SINT64:
+    return "";
+  }
+}
+
 void ConverFields(const google::protobuf::Descriptor *d) {
   FOR_RANGE(i, d->field_count()) {
     auto f = d->field(i);
     auto t = f->message_type();
     std::cerr << "  - ";
+    auto ods_t = GetODSType(f->type());
+    if (!ods_t.empty()) {
+      std::cerr << ods_t << ": ";
+    }
     if (t) {
       std::cerr << t->name() << ": ";
     }
