@@ -130,21 +130,20 @@ void ConverFields(const google::protobuf::Descriptor *d,
     auto ods_t = GetODSType(f->type());
     if (f->type() == FieldDescriptor::TYPE_ENUM &&
         f->enum_type()->name() == "DataType") {
-      ods_def.def["attrs"].push_back("DataType:$" + f->name());
+      ods_def.add_attr("DataType:$" + f->name());
     } else if (f->type() == FieldDescriptor::TYPE_MESSAGE) {
       auto t = f->message_type();
       if (t->name() == "ShapeProto") {
-        ods_def.def["attrs"].push_back("ShapeAttr:$" + f->name());
+        ods_def.add_attr("ShapeAttr:$" + f->name());
       } else if (t->name() == "Int64List") {
         std::cerr << "SI64ArrayAttr";
       } else if (t->name() == "LogicalBlobId") {
-        ods_def.def["input"].push_back("OneFlow_Tensor:$" + f->name());
+        ods_def.add_input("OneFlow_Tensor:$" + f->name());
       } else {
-        ods_def.def["attrs"].push_back("[" + t->name() + "]" + ":$" +
-                                       f->name());
+        ods_def.add_attr("[" + t->name() + "]" + ":$" + f->name());
       }
     } else if (!ods_t.empty()) {
-      ods_def.def["attrs"].push_back(ods_t + ":$" + f->name());
+      ods_def.add_attr(ods_t + ":$" + f->name());
     } else {
       LOG("can't handle" + std::to_string(f->type()));
       std::exit(1);
