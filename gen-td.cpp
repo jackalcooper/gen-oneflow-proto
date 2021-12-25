@@ -29,19 +29,27 @@ public:
   json def;
   inja::Environment env;
   std::string serialize() {
-
-    std::string result{};
-    env.render(
+    return env.render(
         R"(
-def OneFlow_{{ op_class_name }} : OneFlow_BaseOp<"{{ name }}", []>
-  let attrs = (ins
+def OneFlow_{{ op_class_name }} : OneFlow_BaseOp<"{{ name }}", [NoSideEffect, DeclareOpInterfaceMethods<UserOpCompatibleInterface>]> {
+  let input = (ins
+## for i in input
+      {{ i }}{% if not loop.is_last %},{% endif %}
+## endfor
+  );
+let output = (outs
+## for o in output
+      {{ o }}{% if not loop.is_last %},{% endif %}
+## endfor
+  );
+let attrs = (ins
 ## for attr in attrs
       {{ attr }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
+}
 )",
         def);
-    return result;
   }
 };
 
@@ -102,6 +110,7 @@ std::string GetODSType(FieldDescriptor::Type t) {
   case FieldDescriptor::TYPE_SINT64:
     return "";
   }
+  return "";
 }
 
 void ConverFields(const google::protobuf::Descriptor *d) {
