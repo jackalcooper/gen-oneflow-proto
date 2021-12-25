@@ -1,7 +1,8 @@
+#include "google/protobuf/compiler/cpp/cpp_helpers.h"
 #include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/compiler/plugin.h>
 #include <google/protobuf/descriptor.h>
-
+#undef NDEBUG
 using namespace google::protobuf::compiler;
 using namespace google::protobuf;
 class MyCodeGenerator : public CodeGenerator {
@@ -69,8 +70,9 @@ std::string GetODSType(FieldDescriptor::Type t) {
 
 void ConverFields(const google::protobuf::Descriptor *d) {
   FOR_RANGE(i, d->field_count()) {
+    const bool is_last = i == d->field_count() - 1;
     auto f = d->field(i);
-    std::cerr << "  - ";
+    std::cerr << "    ";
     auto ods_t = GetODSType(f->type());
     if (f->type() == FieldDescriptor::TYPE_ENUM &&
         f->enum_type()->name() == "DataType") {
@@ -93,12 +95,22 @@ void ConverFields(const google::protobuf::Descriptor *d) {
       std::exit(1);
     }
     std::cerr << ":$";
-    LOG(f->name());
+    LOG(f->name() + (is_last ? "" : ","));
   }
 }
 
 const int USER_OP_NUMBER = 199;
 bool IsSystemOp(int number) { return number > 100 && number < USER_OP_NUMBER; }
+
+bool EndsWith(const std::string &data, const std::string &suffix) {
+  return data.find(suffix, data.size() - suffix.size()) != std::string::npos;
+}
+
+std::string GetBaseOp() { return "OneFlow_BaseOp"; }
+
+std::string GetTraits() { return ""; }
+
+bool ShouldGenBaseClass() { return false; }
 
 } // namespace
 
@@ -121,9 +133,17 @@ bool MyCodeGenerator::Generate(const FileDescriptor *file,
     const bool should_convert = IsSystemOp(m->number());
     if (!should_convert)
       continue;
-    std::cerr << m->number() << "\n";
-    std::cerr << m->name() << "\n";
+    assert(EndsWith(m->name(), "_conf"));
+    const std::string register_name = m->name().substr(0, m->name().size() - 5);
+    std::cerr << (ShouldGenBaseClass() ? "class" : "def") << " OneFlow_"
+              << cpp::UnderscoresToCamelCase(register_name, true)
+              << "Op : " << GetBaseOp() << "<\"" << register_name
+              << "\", [" + GetTraits() + "]> "; // TODO: add traits
+    std::cerr << "\n";
+    std::cerr << "  let attrs = (ins\n";
     ConverFields(m->message_type());
+    std::cerr << "  );"
+              << "\n";
   }
   return true;
 }
