@@ -28,6 +28,9 @@ public:
   std::string op_type_name;
   json def;
   inja::Environment env;
+  void add_input(const std::string &field) { def["input"].push_back(field); }
+  void add_output(const std::string &field) { def["output"].push_back(field); }
+  void add_attr(const std::string &field) { def["attrs"].push_back(field); }
   std::string serialize() {
     return env.render(
         R"(
