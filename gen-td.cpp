@@ -40,12 +40,12 @@ def OneFlow_{{ op_class_name }} : OneFlow_BaseOp<"{{ name }}", [NoSideEffect, De
       {{ i }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
-let output = (outs
+  let output = (outs
 ## for o in output
       {{ o }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
-let attrs = (ins
+  let attrs = (ins
 ## for attr in attrs
       {{ attr }}{% if not loop.is_last %},{% endif %}
 ## endfor
@@ -183,15 +183,9 @@ bool MyCodeGenerator::Generate(const FileDescriptor *file,
       continue;
     assert(EndsWith(m->name(), "_conf"));
     const std::string register_name = m->name().substr(0, m->name().size() - 5);
-    std::cerr << (ShouldGenBaseClass() ? "class" : "def") << " OneFlow_"
-              << cpp::UnderscoresToCamelCase(register_name, true)
-              << "Op : " << GetBaseOp() << "<\"" << register_name
-              << "\", [" + GetTraits() + "]> "; // TODO: add traits
-    std::cerr << "\n";
-    std::cerr << "  let attrs = (ins\n";
-    ConverFields(m->message_type());
-    std::cerr << "  );"
-              << "\n";
+    ODSDefinition ods_def(register_name);
+
+    std::cerr << ods_def.serialize();
   }
   return true;
 }
