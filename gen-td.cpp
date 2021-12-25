@@ -81,6 +81,8 @@ void ConverFields(const google::protobuf::Descriptor *d) {
         std::cerr << "ShapeAttr";
       } else if (t->name() == "Int64List") {
         std::cerr << "SI64ArrayAttr";
+      } else if (t->name() == "LogicalBlobId") {
+        std::cerr << "OneFlow_Tensor";
       } else {
         std::cerr << "[" << t->name() << "]";
       }
