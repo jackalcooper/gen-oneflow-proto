@@ -1,5 +1,6 @@
 #include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/compiler/plugin.h>
+#include <google/protobuf/descriptor.h>
 
 using namespace google::protobuf::compiler;
 using namespace google::protobuf;
@@ -14,15 +15,23 @@ public:
 
   bool Generate(const FileDescriptor *file, const std::string &parameter,
                 GeneratorContext *generator_context,
-                std::string *error) const override {
-    return true;
-  }
+                std::string *error) const override;
 };
 
 MyCodeGenerator::MyCodeGenerator() {}
 
 MyCodeGenerator::~MyCodeGenerator() {}
 
+bool MyCodeGenerator::Generate(const FileDescriptor *file,
+                               const std::string &parameter,
+                               GeneratorContext *generator_context,
+                               std::string *error) const {
+  std::cerr << parameter << "\n";
+  std::cerr << *error << "\n";
+  std::cerr << file->name() << "\n";
+
+  return true;
+}
 int main(int argc, char **argv) {
   MyCodeGenerator generator;
   return google::protobuf::compiler::PluginMain(argc, argv, &generator);
