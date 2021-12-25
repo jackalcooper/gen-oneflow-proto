@@ -55,7 +55,7 @@ std::string GetODSType(FieldDescriptor::Type t) {
   case FieldDescriptor::TYPE_UINT32:
     return "SI32Attr";
   case FieldDescriptor::TYPE_ENUM:
-    return "";
+    return "ENUM";
   case FieldDescriptor::TYPE_SFIXED32:
     return "";
   case FieldDescriptor::TYPE_SFIXED64:
@@ -70,14 +70,16 @@ std::string GetODSType(FieldDescriptor::Type t) {
 void ConverFields(const google::protobuf::Descriptor *d) {
   FOR_RANGE(i, d->field_count()) {
     auto f = d->field(i);
-    auto t = f->message_type();
     std::cerr << "  - ";
     auto ods_t = GetODSType(f->type());
     if (!ods_t.empty()) {
       std::cerr << ods_t << ": ";
-    }
-    if (t) {
+    } else if (f->type() == FieldDescriptor::TYPE_MESSAGE) {
+      auto t = f->message_type();
       std::cerr << t->name() << ": ";
+    } else {
+      LOG("can't handle" + std::to_string(f->type()));
+      std::exit(1);
     }
     LOG(f->name());
   }
