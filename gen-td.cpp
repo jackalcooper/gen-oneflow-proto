@@ -158,8 +158,7 @@ void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
       } else if (t->name() == "LogicalBlobId") {
         add_input("OneFlow_Tensor:$" + field_name);
       } else {
-        ConverFields(t, field_prefix + (field_prefix.empty() ? "" : "_") +
-                            field_name);
+        ConverFields(t, field_name + "_");
       }
     } else if (!ods_t.empty()) {
       add_attr(ods_t + ":$" + field_name);
