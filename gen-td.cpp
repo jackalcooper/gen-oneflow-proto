@@ -59,21 +59,21 @@ def OneFlow_{{ op_class_name }} : OneFlow_BaseOp<"{{ name }}", [NoSideEffect, De
 {% if length(input) %}
   let input = (ins
 ## for i in input
-      {{ i.ods_type }}:${{ i.field_name }}{% if not loop.is_last %},{% endif %}
+      {% if i.is_optional %}Optional<{% endif %}{{ i.ods_type }}{% if i.is_optional %}>{% endif %}:${{ i.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
 {% endif %}
 {% if length(output) %}
   let output = (outs
 ## for o in output
-      {{ o.ods_type }}:${{ o.field_name }}{% if not loop.is_last %},{% endif %}
+      {% if o.is_optional %}Optional<{% endif %}{{ o.ods_type }}{% if o.is_optional %}>{% endif %}:${{ o.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
 {% endif %}
 {% if length(attrs) %}
   let attrs = (ins
 ## for a in attrs
-      {{ a.ods_type }}:${{ a.field_name }}{% if not loop.is_last %},{% endif %}
+      {% if a.is_optional %}Optional<{% endif %}{{ a.ods_type }}{% if a.is_optional %}>{% endif %}:${{ a.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
 {% endif %}
@@ -164,28 +164,29 @@ void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
     const bool is_last = i == d->field_count() - 1;
     auto f = d->field(i);
     auto ods_t = GetODSType(f->type());
+    if (f->containing_oneof()) {
+      is_one_of = true;
+    }
     const std::string field_name = field_prefix + f->name();
+    bool is_optional = f->is_optional() || is_one_of;
     if (f->type() == FieldDescriptor::TYPE_ENUM &&
         f->enum_type()->name() == "DataType") {
-      add_attr("DataType", field_name);
+      add_attr("DataType", field_name, is_optional);
     } else if (f->type() == FieldDescriptor::TYPE_ENUM) {
-      add_attr("Enum" + f->enum_type()->name(), field_name);
+      add_attr("Enum" + f->enum_type()->name(), field_name, is_optional);
     } else if (f->type() == FieldDescriptor::TYPE_MESSAGE) {
       auto t = f->message_type();
       if (t->name() == "ShapeProto") {
-        add_attr("ShapeAttr", field_name);
+        add_attr("ShapeAttr", field_name, is_optional);
       } else if (t->name() == "Int64List") {
-        add_input("SI64ArrayAttr", field_name);
+        add_input("SI64ArrayAttr", field_name, is_optional);
       } else if (t->name() == "LogicalBlobId") {
-        add_input("OneFlow_Tensor", field_name);
+        add_input("OneFlow_Tensor", field_name, is_optional);
       } else {
-        if (f->is_optional()) {
-          is_one_of = true;
-        }
         ConverFields(t, field_name + "_", is_one_of);
       }
     } else if (!ods_t.empty()) {
-      add_attr(ods_t, field_name);
+      add_attr(ods_t, field_name, is_optional);
     } else {
       LOG("can't handle" + std::to_string(f->type()));
       std::exit(1);
