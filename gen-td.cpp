@@ -172,7 +172,9 @@ bool MyCodeGenerator::Generate(const FileDescriptor *file,
                                std::string *error) const {
   auto OperatorConf = file->FindMessageTypeByName("OperatorConf");
   auto op_type = OperatorConf->FindOneofByName("op_type");
-  for (int filed_i; filed_i < op_type->field_count(); filed_i += 1) {
+  std::ofstream td_file("OneFlowSystemOps.td");
+  assert(op_type->field_count());
+  for (int filed_i = 0; filed_i < op_type->field_count(); filed_i += 1) {
     auto m = op_type->field(filed_i);
     const bool should_convert = IsSystemOp(m->number());
     if (!should_convert)
@@ -181,8 +183,12 @@ bool MyCodeGenerator::Generate(const FileDescriptor *file,
     const std::string register_name = m->name().substr(0, m->name().size() - 5);
     ODSDefinition ods_def(register_name);
     ConverFields(m->message_type(), ods_def);
-    std::cerr << ods_def.serialize();
+    if (td_file.is_open()) {
+      td_file << ods_def.serialize();
+    }
   }
+  td_file.flush();
+  td_file.close();
   return true;
 }
 int main(int argc, char **argv) {
