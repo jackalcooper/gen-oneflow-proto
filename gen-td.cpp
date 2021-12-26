@@ -149,6 +149,8 @@ void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
     if (f->type() == FieldDescriptor::TYPE_ENUM &&
         f->enum_type()->name() == "DataType") {
       add_attr("DataType:$" + field_name);
+    } else if (f->type() == FieldDescriptor::TYPE_ENUM) {
+      add_attr("Enum" + f->enum_type()->name() + ":$" + field_name);
     } else if (f->type() == FieldDescriptor::TYPE_MESSAGE) {
       auto t = f->message_type();
       if (t->name() == "ShapeProto") {
