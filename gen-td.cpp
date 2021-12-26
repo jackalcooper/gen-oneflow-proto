@@ -101,8 +101,8 @@ public:
 #define LOG(x) std::cerr << x << "\n";
 namespace {
 
-std::string GetODSType(FieldDescriptor::Type t) {
-  switch (t) {
+std::string GetODSType(const FieldDescriptor *f) {
+  switch (f->type()) {
   case FieldDescriptor::TYPE_DOUBLE:
     return "F64Attr";
   case FieldDescriptor::TYPE_FLOAT:
@@ -120,6 +120,8 @@ std::string GetODSType(FieldDescriptor::Type t) {
   case FieldDescriptor::TYPE_BOOL:
     return "BoolAttr";
   case FieldDescriptor::TYPE_STRING:
+    if (f->is_repeated())
+      return "StrArrayAttr";
     return "StrAttr";
   case FieldDescriptor::TYPE_GROUP:
     return "";
@@ -163,7 +165,7 @@ void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
   FOR_RANGE(i, d->field_count()) {
     const bool is_last = i == d->field_count() - 1;
     auto f = d->field(i);
-    auto ods_t = GetODSType(f->type());
+    auto ods_t = GetODSType(f);
     if (f->containing_oneof()) {
       is_one_of = true;
     }
