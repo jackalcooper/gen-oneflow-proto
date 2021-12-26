@@ -6,7 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "" FORCE)
 set(CMAKE_C_COMPILER_LAUNCHER ccache CACHE STRING "" FORCE)
 set(CMAKE_CXX_COMPILER_LAUNCHER ccache CACHE STRING "" FORCE)
 set(CMAKE_CUDA_COMPILER_LAUNCHER ccache CACHE STRING "" FORCE)
-
+set(CMAKE_CXX_STANDARD 14)
 function(use_mirror)
   cmake_parse_arguments(
     PARSED_ARGS
@@ -52,7 +52,8 @@ endif()
 set(protobuf_BUILD_TESTS OFF CACHE STRING "" FORCE)
 set(PROTOBUF_URL "https://github.com/protocolbuffers/protobuf/archive/v3.9.2.zip")
 set(PROTOBUF_URL "https://oneflow-static.oss-cn-beijing.aliyuncs.com/third_party_mirror/https/github.com/protocolbuffers/protobuf/archive/v3.9.2.zip")
-# set(PROTOBUF_URL "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.19.1.zip")
+#use_mirror(VARIABLE PROTOBUF_URL URL ${PROTOBUF_URL})
+set(PROTOBUF_URL "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.19.1.zip")
 FetchContent_Declare(
     protobuf
     URL ${PROTOBUF_URL}
@@ -74,6 +75,7 @@ target_include_directories(gen-td
 )
 add_custom_target(gen-sys-op-td)
 set(ONEFLOW_SRC_DIR /home/caishenghang/oneflow-conda)
+set(ONEFLOW_SRC_DIR /Users/tsai/work/oneflow)
 add_custom_command(
     TARGET gen-sys-op-td
     COMMAND protoc --plugin=protoc-gen-oneflow=$<TARGET_FILE:gen-td>
