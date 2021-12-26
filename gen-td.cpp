@@ -9,6 +9,16 @@ using namespace google::protobuf::compiler;
 using namespace google::protobuf;
 using inja::json;
 
+namespace {
+json GetEntry(std::string type, const std::string field_name,
+              bool is_optional) {
+  json j;
+  j["ods_type"] = type;
+  j["field_name"] = field_name;
+  j["is_optional"] = is_optional;
+  return j;
+}
+} // namespace
 class ODSDefinition {
 public:
   ODSDefinition(std::string op_type_name)
@@ -24,15 +34,24 @@ public:
   ODSDefinition &operator=(ODSDefinition &&) = default;
   ODSDefinition &operator=(const ODSDefinition &) = default;
   void ConverFields(const google::protobuf::Descriptor *d,
-                    std::string field_prefix = "");
+                    std::string field_prefix = "", bool is_one_of = false);
   ~ODSDefinition() = default;
 
   std::string op_type_name;
   json def;
   inja::Environment env;
-  void add_input(const std::string &field) { def["input"].push_back(field); }
-  void add_output(const std::string &field) { def["output"].push_back(field); }
-  void add_attr(const std::string &field) { def["attrs"].push_back(field); }
+  void add_input(std::string type, const std::string field_name,
+                 bool is_optional = false) {
+    def["input"].push_back(GetEntry(type, field_name, is_optional));
+  }
+  void add_output(std::string type, const std::string field_name,
+                  bool is_optional = false) {
+    def["output"].push_back(GetEntry(type, field_name, is_optional));
+  }
+  void add_attr(std::string type, const std::string field_name,
+                bool is_optional = false) {
+    def["attrs"].push_back(GetEntry(type, field_name, is_optional));
+  }
   std::string serialize() {
     return env.render(
         R"(
@@ -40,21 +59,21 @@ def OneFlow_{{ op_class_name }} : OneFlow_BaseOp<"{{ name }}", [NoSideEffect, De
 {% if length(input) %}
   let input = (ins
 ## for i in input
-      {{ i }}{% if not loop.is_last %},{% endif %}
+      {{ i.ods_type }}:${{ i.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
 {% endif %}
 {% if length(output) %}
   let output = (outs
 ## for o in output
-      {{ o }}{% if not loop.is_last %},{% endif %}
+      {{ o.ods_type }}:${{ o.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
 {% endif %}
 {% if length(attrs) %}
   let attrs = (ins
-## for attr in attrs
-      {{ attr }}{% if not loop.is_last %},{% endif %}
+## for a in attrs
+      {{ a.ods_type }}:${{ a.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
 {% endif %}
@@ -140,7 +159,7 @@ bool ShouldGenBaseClass() { return false; }
 } // namespace
 
 void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
-                                 std::string field_prefix) {
+                                 std::string field_prefix, bool is_one_of) {
   FOR_RANGE(i, d->field_count()) {
     const bool is_last = i == d->field_count() - 1;
     auto f = d->field(i);
@@ -148,22 +167,25 @@ void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
     const std::string field_name = field_prefix + f->name();
     if (f->type() == FieldDescriptor::TYPE_ENUM &&
         f->enum_type()->name() == "DataType") {
-      add_attr("DataType:$" + field_name);
+      add_attr("DataType", field_name);
     } else if (f->type() == FieldDescriptor::TYPE_ENUM) {
-      add_attr("Enum" + f->enum_type()->name() + ":$" + field_name);
+      add_attr("Enum" + f->enum_type()->name(), field_name);
     } else if (f->type() == FieldDescriptor::TYPE_MESSAGE) {
       auto t = f->message_type();
       if (t->name() == "ShapeProto") {
-        add_attr("ShapeAttr:$" + field_name);
+        add_attr("ShapeAttr", field_name);
       } else if (t->name() == "Int64List") {
-        add_input("SI64ArrayAttr:$" + field_name);
+        add_input("SI64ArrayAttr", field_name);
       } else if (t->name() == "LogicalBlobId") {
-        add_input("OneFlow_Tensor:$" + field_name);
+        add_input("OneFlow_Tensor", field_name);
       } else {
-        ConverFields(t, field_name + "_");
+        if (f->is_optional()) {
+          is_one_of = true;
+        }
+        ConverFields(t, field_name + "_", is_one_of);
       }
     } else if (!ods_t.empty()) {
-      add_attr(ods_t + ":$" + field_name);
+      add_attr(ods_t, field_name);
     } else {
       LOG("can't handle" + std::to_string(f->type()));
       std::exit(1);
