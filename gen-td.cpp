@@ -100,17 +100,22 @@ std::string GetODSType(const FieldDescriptor *f) {
   case FieldDescriptor::TYPE_DOUBLE:
     return "F64Attr";
   case FieldDescriptor::TYPE_FLOAT:
+    if (f->is_repeated())
+      return "F32ArrayAttr";
     return "F32Attr";
   case FieldDescriptor::TYPE_INT64:
-    return "SI64Attr";
   case FieldDescriptor::TYPE_UINT64:
+    if (f->is_repeated())
+      return "SI64ArrayAttr";
     return "SI64Attr";
   case FieldDescriptor::TYPE_INT32:
+    if (f->is_repeated())
+      return "SI64ArrayAttr";
     return "SI32Attr";
   case FieldDescriptor::TYPE_FIXED64:
-    return "";
+    break;
   case FieldDescriptor::TYPE_FIXED32:
-    return "";
+    break;
   case FieldDescriptor::TYPE_BOOL:
     return "BoolAttr";
   case FieldDescriptor::TYPE_STRING:
@@ -118,23 +123,23 @@ std::string GetODSType(const FieldDescriptor *f) {
       return "StrArrayAttr";
     return "StrAttr";
   case FieldDescriptor::TYPE_GROUP:
-    return "";
+    break;
   case FieldDescriptor::TYPE_MESSAGE:
-    return "";
+    break;
   case FieldDescriptor::TYPE_BYTES:
-    return "";
+    break;
   case FieldDescriptor::TYPE_UINT32:
     return "SI32Attr";
   case FieldDescriptor::TYPE_ENUM:
     return "ENUM";
   case FieldDescriptor::TYPE_SFIXED32:
-    return "";
+    break;
   case FieldDescriptor::TYPE_SFIXED64:
-    return "";
+    break;
   case FieldDescriptor::TYPE_SINT32:
-    return "";
+    break;
   case FieldDescriptor::TYPE_SINT64:
-    return "";
+    break;
   }
   return "";
 }
