@@ -19,6 +19,17 @@ json GetEntry(std::string type, const std::string field_name,
   j["is_optional"] = is_optional;
   return j;
 }
+
+json GetArgEntry(std::string type, const std::string field_name,
+                 bool is_optional, bool is_variadic = false) {
+  json j;
+  j["ods_type"] = type;
+  j["field_name"] = field_name;
+  j["is_optional"] = is_optional;
+  j["is_variadic"] = is_variadic;
+  return j;
+}
+
 } // namespace
 class ODSDefinition {
 public:
@@ -42,12 +53,12 @@ public:
   json def;
   inja::Environment env;
   void add_input(std::string type, const std::string field_name,
-                 bool is_optional = false) {
-    def["input"].push_back(GetEntry(type, field_name, is_optional));
+                 bool is_optional = false, bool is_variadic = false) {
+    def["input"].push_back(GetArgEntry(type, field_name, is_optional));
   }
   void add_output(std::string type, const std::string field_name,
-                  bool is_optional = false) {
-    def["output"].push_back(GetEntry(type, field_name, is_optional));
+                  bool is_optional = false, bool is_variadic = false) {
+    def["output"].push_back(GetArgEntry(type, field_name, is_optional));
   }
   void add_attr(std::string type, const std::string field_name,
                 bool is_optional = false) {
@@ -59,12 +70,12 @@ public:
 def OneFlow_{{ op_class_name }} : OneFlow_BaseOp<"{{ name }}", [NoSideEffect, DeclareOpInterfaceMethods<UserOpCompatibleInterface>]> {
 {% if length(input) > 0 %}  let input = (ins
 ## for i in input
-      {% if i.is_optional %}Optional<{% endif %}{{ i.ods_type }}{% if i.is_optional %}>{% endif %}:${{ i.field_name }}{% if not loop.is_last %},{% endif %}
+      {% if i.is_optional %}Optional<{% endif %}{% if i.is_variadic %}Variadic<{% endif %}{{ i.ods_type }}{% if i.is_variadic %}>{% endif %}{% if i.is_optional %}>{% endif %}:${{ i.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
 {% endif %}{% if length(output) %}  let output = (outs
 ## for o in output
-      {% if o.is_optional %}Optional<{% endif %}{{ o.ods_type }}{% if o.is_optional %}>{% endif %}:${{ o.field_name }}{% if not loop.is_last %},{% endif %}
+      {% if o.is_optional %}Optional<{% endif %}{% if o.is_variadic %}Variadic<{% endif %}{{ o.ods_type }}{% if o.is_variadic %}>{% endif %}{% if o.is_optional %}>{% endif %}:${{ o.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
 {% endif %}{% if length(attrs) %}  let attrs = (ins
@@ -185,18 +196,18 @@ void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
       if (t->name() == "ShapeProto") {
         add_attr("ShapeAttr", field_name, is_optional);
       } else if (t->name() == "Int64List") {
-        add_input("SI64ArrayAttr", field_name, is_optional);
+        add_attr("SI64ArrayAttr", field_name, is_optional);
       } else if (t->name() == "LogicalBlobId") {
-        add_input("OneFlow_Tensor", field_name, is_optional);
+        add_input("OneFlow_Tensor", field_name, is_optional, f->is_repeated());
       } else {
         ConverFields(t, field_name + "_", is_one_of);
       }
     } else if (f->name() == "out" &&
                f->type() == FieldDescriptor::TYPE_STRING) {
-      add_output("OneFlow_Tensor", field_name, is_optional);
+      add_output("OneFlow_Tensor", field_name, is_optional, f->is_repeated());
     } else if (f->name() == "tick" &&
                f->type() == FieldDescriptor::TYPE_STRING) {
-      add_input("OneFlow_Tensor", field_name, is_optional);
+      add_input("OneFlow_Tensor", field_name, is_optional, f->is_repeated());
     } else if (!ods_t.empty()) {
       add_attr(ods_t, field_name, is_optional);
     } else {
