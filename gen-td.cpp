@@ -190,6 +190,12 @@ void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
       } else {
         ConverFields(t, field_name + "_", is_one_of);
       }
+    } else if (f->name() == "out" &&
+               f->type() == FieldDescriptor::TYPE_STRING) {
+      add_output("OneFlow_Tensor", field_name, is_optional);
+    } else if (f->name() == "tick" &&
+               f->type() == FieldDescriptor::TYPE_STRING) {
+      add_input("OneFlow_Tensor", field_name, is_optional);
     } else if (!ods_t.empty()) {
       add_attr(ods_t, field_name, is_optional);
     } else {
