@@ -45,7 +45,8 @@ public:
   ODSDefinition(const ODSDefinition &) = default;
   ODSDefinition &operator=(ODSDefinition &&) = default;
   ODSDefinition &operator=(const ODSDefinition &) = default;
-  void ConverFields(const google::protobuf::Descriptor *d,
+  void ConverFields(std::string op_type_name,
+                    const google::protobuf::Descriptor *d,
                     std::string field_prefix = "", bool is_one_of = false);
   ~ODSDefinition() = default;
 
@@ -171,7 +172,8 @@ bool ShouldGenBaseClass() { return false; }
 
 } // namespace
 
-void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
+void ODSDefinition::ConverFields(std::string op_type_name,
+                                 const google::protobuf::Descriptor *d,
                                  std::string field_prefix, bool is_one_of) {
   FOR_RANGE(i, d->field_count()) {
     const bool is_last = i == d->field_count() - 1;
@@ -201,8 +203,13 @@ void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
       } else if (t->name() == "LogicalBlobId") {
         add_input("OneFlow_Tensor", field_name, is_optional, f->is_repeated());
       } else {
-        ConverFields(t, field_name + "_", is_one_of);
+        ConverFields(op_type_name, t, field_name + "_", is_one_of);
       }
+    } else if (op_type_name == "shape_elem_cnt") {
+      if (f->name() == "x")
+        add_input("OneFlow_Tensor", field_name, is_optional, f->is_repeated());
+      if (f->name() == "y")
+        add_output("OneFlow_Tensor", field_name, is_optional, f->is_repeated());
     } else if (f->name() == "out" &&
                f->type() == FieldDescriptor::TYPE_STRING) {
       add_output("OneFlow_Tensor", field_name, is_optional, f->is_repeated());
@@ -233,7 +240,7 @@ bool MyCodeGenerator::Generate(const FileDescriptor *file,
     assert(EndsWith(m->name(), "_conf"));
     const std::string register_name = m->name().substr(0, m->name().size() - 5);
     ODSDefinition ods_def(register_name);
-    ods_def.ConverFields(m->message_type());
+    ods_def.ConverFields(register_name, m->message_type());
     if (td_file.is_open()) {
       td_file << ods_def.serialize();
     }
