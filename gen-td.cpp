@@ -3,6 +3,7 @@
 #include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/compiler/plugin.h>
 #include <google/protobuf/descriptor.h>
+#include <regex>
 
 #undef NDEBUG
 using namespace google::protobuf::compiler;
@@ -168,13 +169,16 @@ void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
     if (f->containing_oneof()) {
       is_one_of = true;
     }
-    const std::string field_name = field_prefix + f->name();
+    auto filed_name_ = f->name();
+    filed_name_ = std::regex_replace(filed_name_, std::regex("_conf"), "");
+    const std::string field_name = field_prefix + filed_name_;
     bool is_optional = f->is_optional() || is_one_of;
     if (f->type() == FieldDescriptor::TYPE_ENUM &&
         f->enum_type()->name() == "DataType") {
       add_attr("DataType", field_name, is_optional);
     } else if (f->type() == FieldDescriptor::TYPE_ENUM) {
-      add_attr("Enum" + f->enum_type()->name(), field_name, is_optional);
+      add_attr("UndefinedEnum" + f->enum_type()->name(), field_name,
+               is_optional);
     } else if (f->type() == FieldDescriptor::TYPE_MESSAGE) {
       auto t = f->message_type();
       if (t->name() == "ShapeProto") {
