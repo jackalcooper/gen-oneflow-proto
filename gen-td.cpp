@@ -171,6 +171,7 @@ void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
     }
     auto filed_name_ = f->name();
     filed_name_ = std::regex_replace(filed_name_, std::regex("_conf"), "");
+    filed_name_ = std::regex_replace(filed_name_, std::regex("_lbi"), "");
     const std::string field_name = field_prefix + filed_name_;
     bool is_optional = f->is_optional() || is_one_of;
     if (f->type() == FieldDescriptor::TYPE_ENUM &&
