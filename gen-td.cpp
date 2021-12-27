@@ -83,8 +83,8 @@ def OneFlow_{{ op_class_name }} : OneFlow_BaseOp<"{{ name }}", [NoSideEffect, De
 ## for a in attrs
       {% if a.is_optional %}Optional<{% endif %}{{ a.ods_type }}{% if a.is_optional %}>{% endif %}:${{ a.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
-  );{% endif %}
-}
+  );
+{% endif %}}
 )",
         def);
   }
