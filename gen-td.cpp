@@ -56,27 +56,21 @@ public:
     return env.render(
         R"(
 def OneFlow_{{ op_class_name }} : OneFlow_BaseOp<"{{ name }}", [NoSideEffect, DeclareOpInterfaceMethods<UserOpCompatibleInterface>]> {
-{% if length(input) %}
-  let input = (ins
+{% if length(input) > 0 %}  let input = (ins
 ## for i in input
       {% if i.is_optional %}Optional<{% endif %}{{ i.ods_type }}{% if i.is_optional %}>{% endif %}:${{ i.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
-{% endif %}
-{% if length(output) %}
-  let output = (outs
+{% endif %}{% if length(output) %}  let output = (outs
 ## for o in output
       {% if o.is_optional %}Optional<{% endif %}{{ o.ods_type }}{% if o.is_optional %}>{% endif %}:${{ o.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
   );
-{% endif %}
-{% if length(attrs) %}
-  let attrs = (ins
+{% endif %}{% if length(attrs) %}  let attrs = (ins
 ## for a in attrs
       {% if a.is_optional %}Optional<{% endif %}{{ a.ods_type }}{% if a.is_optional %}>{% endif %}:${{ a.field_name }}{% if not loop.is_last %},{% endif %}
 ## endfor
-  );
-{% endif %}
+  );{% endif %}
 }
 )",
         def);
