@@ -206,7 +206,7 @@ void ODSDefinition::ConverFields(const google::protobuf::Descriptor *d,
     } else if (f->name() == "out" &&
                f->type() == FieldDescriptor::TYPE_STRING) {
       add_output("OneFlow_Tensor", field_name, is_optional, f->is_repeated());
-    } else if (f->name() == "tick" &&
+    } else if ((f->name() == "tick" || f->name() == "in") &&
                f->type() == FieldDescriptor::TYPE_STRING) {
       add_input("OneFlow_Tensor", field_name, is_optional, f->is_repeated());
     } else if (!ods_t.empty()) {
