@@ -205,6 +205,8 @@ ODSDefinition::ConverFields(std::string op_type_name,
         add_attr("SI64ArrayAttr", field_name, is_optional);
       } else if (t->name() == "LogicalBlobId") {
         add_input("OneFlow_Tensor", field_name, is_optional, f->is_repeated());
+      } else if (t->name() == "NdSbp") {
+        add_input("StrArrayAttr", field_name, is_optional, true);
       } else {
         ConverFields(op_type_name, t, field_name + "_", is_one_of);
       }
