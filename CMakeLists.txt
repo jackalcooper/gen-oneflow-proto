@@ -79,6 +79,11 @@ set(ONEFLOW_SRC_DIR /home/caishenghang/oneflow-conda)
 add_custom_command(
     TARGET gen-sys-op-td
     COMMAND protoc --plugin=protoc-gen-oneflow=$<TARGET_FILE:gen-td> --oneflow_out=${CMAKE_CURRENT_BINARY_DIR} --proto_path ${ONEFLOW_SRC_DIR} ${ONEFLOW_SRC_DIR}/oneflow/core/operator/op_conf.proto
-    COMMAND protoc --plugin=protoc-gen-oneflow=$<TARGET_FILE:gen-td> --oneflow_out=${ONEFLOW_SRC_DIR}/oneflow/ir/include/OneFlow --proto_path ${ONEFLOW_SRC_DIR} ${ONEFLOW_SRC_DIR}/oneflow/core/operator/op_conf.proto
     DEPENDS gen-td
+)
+add_custom_command(
+    TARGET gen-sys-op-td
+    COMMAND protoc --plugin=protoc-gen-oneflow=$<TARGET_FILE:gen-td> --oneflow_out=oneflow/ir/include/OneFlow --proto_path ${ONEFLOW_SRC_DIR} ${ONEFLOW_SRC_DIR}/oneflow/core/operator/op_conf.proto
+    DEPENDS gen-td
+    WORKING_DIRECTORY ${ONEFLOW_SRC_DIR}
 )

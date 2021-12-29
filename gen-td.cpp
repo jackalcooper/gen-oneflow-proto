@@ -184,6 +184,7 @@ ODSDefinition::ConverFields(std::string op_type_name,
     auto ods_t = GetODSType(f);
     if (f->containing_oneof()) {
       is_one_of = true;
+      field_prefix = "[" + f->containing_oneof()->name() + "]" + field_prefix;
     }
     auto filed_name_ = f->name();
     filed_name_ = std::regex_replace(filed_name_, std::regex("_conf"), "");
