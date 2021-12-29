@@ -47,8 +47,8 @@ public:
   ODSDefinition &operator=(const ODSDefinition &) = default;
   ODSDefinition &ConverFields(std::string op_type_name,
                               const google::protobuf::Descriptor *d,
-                              std::string field_prefix = "",
-                              bool is_one_of = false);
+                              const std::string field_prefix = "",
+                              const bool is_one_of = false);
   ~ODSDefinition() = default;
 
   std::string op_type_name;
@@ -174,17 +174,17 @@ bool ShouldGenBaseClass() { return false; }
 
 } // namespace
 
-ODSDefinition &
-ODSDefinition::ConverFields(std::string op_type_name,
-                            const google::protobuf::Descriptor *d,
-                            std::string field_prefix, bool is_one_of) {
+ODSDefinition &ODSDefinition::ConverFields(
+    std::string op_type_name, const google::protobuf::Descriptor *d,
+    const std::string field_prefix_, const bool is_nested_in_one_of) {
   FOR_RANGE(i, d->field_count()) {
     const bool is_last = i == d->field_count() - 1;
     auto f = d->field(i);
+    bool is_one_of = is_nested_in_one_of || f->containing_oneof();
     auto ods_t = GetODSType(f);
+    auto field_prefix = field_prefix_;
     if (f->containing_oneof()) {
-      is_one_of = true;
-      field_prefix = "[" + f->containing_oneof()->name() + "]" + field_prefix;
+      field_prefix = f->containing_oneof()->name() + "__" + field_prefix;
     }
     auto filed_name_ = f->name();
     filed_name_ = std::regex_replace(filed_name_, std::regex("_conf"), "");
