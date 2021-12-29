@@ -243,9 +243,19 @@ bool MyCodeGenerator::Generate(const FileDescriptor *file,
       continue;
     assert(EndsWith(m->name(), "_conf"));
     const std::string register_name = m->name().substr(0, m->name().size() - 5);
-    ODSDefinition ods_def(register_name);
-    td_file
-        << ods_def.ConverFields(register_name, m->message_type()).serialize();
+    if (register_name == "copy_hd") {
+      ODSDefinition ods_def_copy_h2d("copy_h2d");
+      ODSDefinition ods_def_copy_d2h("copy_d2h");
+      ods_def_copy_h2d.add_input("OneFlow_Tensor", "in");
+      ods_def_copy_h2d.add_output("OneFlow_Tensor", "out");
+      ods_def_copy_d2h.add_input("OneFlow_Tensor", "in");
+      ods_def_copy_d2h.add_output("OneFlow_Tensor", "out");
+      td_file << ods_def_copy_h2d.serialize() << ods_def_copy_d2h.serialize();
+    } else {
+      ODSDefinition ods_def(register_name);
+      td_file
+          << ods_def.ConverFields(register_name, m->message_type()).serialize();
+    }
   }
   td_file.flush();
   td_file.close();
