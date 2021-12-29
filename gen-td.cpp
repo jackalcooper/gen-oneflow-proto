@@ -58,6 +58,7 @@ public:
                  bool is_optional = false, bool is_variadic = false) {
     def["input"].push_back(GetArgEntry(type, field_name, is_optional));
   }
+  int output_size() { return def["output"].size(); }
   void add_output(std::string type, const std::string field_name,
                   bool is_optional = false, bool is_variadic = false) {
     def["output"].push_back(GetArgEntry(type, field_name, is_optional));
@@ -253,8 +254,10 @@ bool MyCodeGenerator::Generate(const FileDescriptor *file,
       td_file << ods_def_copy_h2d.serialize() << ods_def_copy_d2h.serialize();
     } else {
       ODSDefinition ods_def(register_name);
-      td_file
-          << ods_def.ConverFields(register_name, m->message_type()).serialize();
+      ods_def.ConverFields(register_name, m->message_type());
+      if (ods_def.output_size() == 0)
+        ods_def.add_output("OneFlow_Tensor", "out");
+      td_file << ods_def.serialize();
     }
   }
   td_file.flush();
