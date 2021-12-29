@@ -45,9 +45,10 @@ public:
   ODSDefinition(const ODSDefinition &) = default;
   ODSDefinition &operator=(ODSDefinition &&) = default;
   ODSDefinition &operator=(const ODSDefinition &) = default;
-  void ConverFields(std::string op_type_name,
-                    const google::protobuf::Descriptor *d,
-                    std::string field_prefix = "", bool is_one_of = false);
+  ODSDefinition &ConverFields(std::string op_type_name,
+                              const google::protobuf::Descriptor *d,
+                              std::string field_prefix = "",
+                              bool is_one_of = false);
   ~ODSDefinition() = default;
 
   std::string op_type_name;
@@ -172,9 +173,10 @@ bool ShouldGenBaseClass() { return false; }
 
 } // namespace
 
-void ODSDefinition::ConverFields(std::string op_type_name,
-                                 const google::protobuf::Descriptor *d,
-                                 std::string field_prefix, bool is_one_of) {
+ODSDefinition &
+ODSDefinition::ConverFields(std::string op_type_name,
+                            const google::protobuf::Descriptor *d,
+                            std::string field_prefix, bool is_one_of) {
   FOR_RANGE(i, d->field_count()) {
     const bool is_last = i == d->field_count() - 1;
     auto f = d->field(i);
@@ -223,7 +225,9 @@ void ODSDefinition::ConverFields(std::string op_type_name,
       std::exit(1);
     }
   }
+  return *this;
 }
+
 bool MyCodeGenerator::Generate(const FileDescriptor *file,
                                const std::string &parameter,
                                GeneratorContext *generator_context,
@@ -240,10 +244,8 @@ bool MyCodeGenerator::Generate(const FileDescriptor *file,
     assert(EndsWith(m->name(), "_conf"));
     const std::string register_name = m->name().substr(0, m->name().size() - 5);
     ODSDefinition ods_def(register_name);
-    ods_def.ConverFields(register_name, m->message_type());
-    if (td_file.is_open()) {
-      td_file << ods_def.serialize();
-    }
+    td_file
+        << ods_def.ConverFields(register_name, m->message_type()).serialize();
   }
   td_file.flush();
   td_file.close();
